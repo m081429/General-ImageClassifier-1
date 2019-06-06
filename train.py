@@ -186,6 +186,8 @@ latest = tf.train.latest_checkpoint(checkpoint_dir)
 logger.debug('Loading initialized model')
 try:
     model.load_weights(latest)
+except:
+    pass
 logger.debug('Completed loading initialized model')
 
 ###############################################################################
