@@ -120,10 +120,11 @@ logger.setLevel(args.logLevel)
 ###############################################################################
 
 # Get Training and Validation data
-train_data = Preprocess(args.image_dir_train)
+train_data = Preprocess(args.image_dir_train, loss_function=args.loss_function)
 logger.debug('Completed Preprocess')
 
-AUTOTUNE = tf.data.experimental.AUTOTUNE
+#AUTOTUNE = tf.data.experimental.AUTOTUNE
+AUTOTUNE=1000
 t_path_ds = tf.data.Dataset.from_tensor_slices(train_data.files)
 t_image_ds = t_path_ds.map(format_example, num_parallel_calls=AUTOTUNE)
 t_label_ds = tf.data.Dataset.from_tensor_slices(tf.cast(train_data.labels, tf.int64))
@@ -136,7 +137,7 @@ logger.debug('Completed Training dataset')
 
 if args.image_dir_validation:
     # Get Validation data
-    validation_data = Preprocess(args.image_dir_validation)
+    validation_data = Preprocess(args.image_dir_validation, args.loss_function)
     logger.debug('Completed Preprocess')
 
     v_path_ds = tf.data.Dataset.from_tensor_slices(validation_data.files)
@@ -195,7 +196,7 @@ logger.debug('Completed loading initialized model')
 ###############################################################################
 cb = CallBacks(learning_rate=args.lr, log_dir=out_dir, optimizer=args.optimizer)
 
-tf.keras.utils.plot_model(model, to_file=os.path.join(out_dir, 'model.png'), show_shapes=True, show_layer_names=True)
+#tf.keras.utils.plot_model(model, to_file=os.path.join(out_dir, 'model.png'), show_shapes=True, show_layer_names=True)
 logger.debug('Model image saved')
 
 ###############################################################################

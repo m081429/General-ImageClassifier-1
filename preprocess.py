@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 class Preprocess:
 
-    def __init__(self, directory_path):
+    def __init__(self, directory_path, loss_function=None):
         """
         Return a randomized list of each directory's contents
 
@@ -18,6 +18,7 @@ class Preprocess:
         """
         logger.debug('Initializing Preprocess')
         self.directory_path = directory_path
+        self.loss_function = loss_function
         self.classes = self.__get_classes()
         self.files, self.labels, self.label_dict, self.min_images = self.__get_lists()
 
@@ -53,7 +54,13 @@ class Preprocess:
             files.extend(class_files)
             labels.extend(class_labels)
 
-        return files, tf.one_hot(labels, classes.__len__()), label_dict, min_images
+        labels = tf.dtypes.cast(labels, tf.uint8)
+ 
+        # I noticed that if your loss function expects loss, it has to be one hot, otherwise, it expects an int
+        if not self.loss_function.startswith('Sparse'):
+            labels = tf.one_hot(labels, classes.__len__())
+
+        return files, labels, label_dict, min_images
 
 
 

@@ -142,9 +142,11 @@ class GetModel:
         # Define the trainable model
         model.compile(optimizer=self._get_optimizer(optimizer, lr), loss=self._get_loss(loss_name),
                       metrics=[
-                          tf.keras.metrics.AUC(curve='PR', num_thresholds=10, name='PR'),
-                          tf.keras.metrics.AUC(num_thresholds=10, name='AUC'),
+                          #tf.keras.metrics.AUC(curve='PR', num_thresholds=10, name='PR'),
+                          #tf.keras.metrics.AUC(num_thresholds=10, name='AUC'),
+                          tf.keras.metrics.Accuracy(name='Accuracy'),
                           tf.keras.metrics.CategoricalAccuracy(name='CategoricalAccuracy'),
-                          tf.keras.metrics.BinaryAccuracy(name='BinaryAccuracy')])
+                          #tf.keras.metrics.BinaryAccuracy(name='BinaryAccuracy')
+                      ])
 
         return model
