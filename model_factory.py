@@ -90,7 +90,7 @@ class GetModel:
         base_model = model
         x = base_model.output
         x = Flatten()(x)
-        out = Dense(self.classes, activation='sigmoid')(x)
+        out = Dense(self.classes, activation='softmax')(x)
         conv_model = Model(inputs=input_tensor, outputs=out)
 
         # Now check to see if we are retraining all but the head, or deeper down the stack
@@ -140,6 +140,11 @@ class GetModel:
         model = self.model
 
         # Define the trainable model
-        model.compile(optimizer=self._get_optimizer(optimizer, lr), loss=self._get_loss(loss_name))
+        model.compile(optimizer=self._get_optimizer(optimizer, lr), loss=self._get_loss(loss_name),
+                      metrics=[
+                          tf.keras.metrics.AUC(curve='PR', num_thresholds=10, name='PR'),
+                          tf.keras.metrics.AUC(num_thresholds=10, name='AUC'),
+                          tf.keras.metrics.CategoricalAccuracy(name='CategoricalAccuracy'),
+                          tf.keras.metrics.BinaryAccuracy(name='BinaryAccuracy')])
 
         return model

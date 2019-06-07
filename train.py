@@ -104,7 +104,7 @@ parser.add_argument("--use-multiprocessing",
 parser.add_argument("-V", "--verbose",
                     dest="logLevel",
                     choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'],
-                    default="INFO",
+                    default="DEBUG",
                     help="Set the logging level")
 
 args = parser.parse_args()
@@ -163,8 +163,14 @@ else:
 # This must be fixed for multi-GPU
 mirrored_strategy = tf.distribute.MirroredStrategy()
 logger.debug('Mirror initialized')
-
-with mirrored_strategy.scope():
+GPU = True
+if GPU is True:
+    with mirrored_strategy.scope():
+        m = GetModel(model_name=args.model_name, img_size=args.patch_size, classes=train_data.classes)
+        logger.debug('Model constructed')
+        model = m.compile_model(args.optimizer, args.lr, args.loss_function)
+        logger.debug('Model compiled')
+else:
     m = GetModel(model_name=args.model_name, img_size=args.patch_size, classes=train_data.classes)
     logger.debug('Model constructed')
     model = m.compile_model(args.optimizer, args.lr, args.loss_function)
@@ -177,13 +183,11 @@ if not os.path.exists(out_dir):
 # restore weights if they already exist
 checkpoint_path = os.path.join(out_dir, "cp-{epoch:04d}.ckpt")
 checkpoint_dir = os.path.dirname(checkpoint_path)
-model.save_weights(checkpoint_path.format(epoch=0))
-latest = tf.train.latest_checkpoint(checkpoint_dir)
-logger.debug('Loading initialized model')
-try:
+with mirrored_strategy.scope():
+    model.save_weights(checkpoint_path.format(epoch=0))
+    latest = tf.train.latest_checkpoint(checkpoint_dir)
+    logger.debug('Loading initialized model')
     model.load_weights(latest)
-except:
-    pass
 logger.debug('Completed loading initialized model')
 
 ###############################################################################
