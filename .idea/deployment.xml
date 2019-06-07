@@ -9,6 +9,13 @@
           </mappings>
         </serverdata>
       </paths>
+      <paths name="dsvm">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/home/mfad.mfroot.org/m087494/Desktop/General-ImageClassifier" local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
       <paths name="m087494@rcfgpu02:22 (1)">
         <serverdata>
           <mappings>

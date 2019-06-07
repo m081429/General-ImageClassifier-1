@@ -11,7 +11,6 @@ from callbacks import CallBacks
 from model_factory import GetModel
 from preprocess import Preprocess, format_example
 
-tf.config.gpu.set_per_process_memory_growth(True)
 
 ###############################################################################
 # Input Arguments
@@ -76,8 +75,8 @@ parser.add_argument("-r", "--learning-rate",
 
 parser.add_argument("-L", "--loss-function",
                     dest='loss_function',
-                    default='SparseCategoricalCrossentropy ',
-                    choices=['SparseCategoricalCrossentropy ',
+                    default='SparseCategoricalCrossentropy',
+                    choices=['SparseCategoricalCrossentropy',
                              'CategoricalCrossentropy',
                              'BinaryCrossentropy'],
                     help="Loss functions from tf.keras")
@@ -162,24 +161,21 @@ else:
 ###############################################################################
 
 # This must be fixed for multi-GPU
-# with mirrored_strategy.scope():
-#    m = GetModel(model_name=args.model_name, img_size=args.patch_size, classes=128)
-#    logger.debug('Model constructed')
-#    model = m.compile_model(args.optimizer, args.lr, img_size=args.patch_size)
-#    logger.debug('Model compiled')
+mirrored_strategy = tf.distribute.MirroredStrategy()
+logger.debug('Mirror initialized')
 
-
-m = GetModel(model_name=args.model_name, img_size=args.patch_size, classes=128)
-logger.debug('Model constructed')
-model = m.compile_model(args.optimizer, args.lr, args.loss_function)
-logger.debug('Model compiled')
+with mirrored_strategy.scope():
+    m = GetModel(model_name=args.model_name, img_size=args.patch_size, classes=train_data.classes)
+    logger.debug('Model constructed')
+    model = m.compile_model(args.optimizer, args.lr, args.loss_function)
+    logger.debug('Model compiled')
 
 out_dir = os.path.join(args.log_dir, args.model_name + '_' + args.optimizer + '_' + str(args.lr) + '-' + args.loss_function)
 if not os.path.exists(out_dir):
     os.makedirs(out_dir)
 
 # restore weights if they already exist
-checkpoint_path = os.path.join(out_dir ,"cp-{epoch:04d}.ckpt")
+checkpoint_path = os.path.join(out_dir, "cp-{epoch:04d}.ckpt")
 checkpoint_dir = os.path.dirname(checkpoint_path)
 model.save_weights(checkpoint_path.format(epoch=0))
 latest = tf.train.latest_checkpoint(checkpoint_dir)
@@ -195,15 +191,15 @@ logger.debug('Completed loading initialized model')
 ###############################################################################
 cb = CallBacks(learning_rate=args.lr, log_dir=out_dir, optimizer=args.optimizer)
 
-
 tf.keras.utils.plot_model(model, to_file=os.path.join(out_dir, 'model.png'), show_shapes=True, show_layer_names=True)
 logger.debug('Model image saved')
 
 ###############################################################################
 # Run the training
 ###############################################################################
+
 model.fit(train_ds,
-          steps_per_epoch=train_data.min_images / args.BATCH_SIZE,
+          steps_per_epoch=int(train_data.min_images / args.BATCH_SIZE),
           epochs=args.num_epochs,
           callbacks=cb.get_callbacks(),
           validation_data=validation_ds,

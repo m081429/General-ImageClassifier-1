@@ -90,7 +90,7 @@ class GetModel:
         base_model = model
         x = base_model.output
         x = Flatten()(x)
-        out = Dense(1, activation='sigmoid')(x)
+        out = Dense(self.classes, activation='sigmoid')(x)
         conv_model = Model(inputs=input_tensor, outputs=out)
 
         # Now check to see if we are retraining all but the head, or deeper down the stack
@@ -103,25 +103,25 @@ class GetModel:
         return conv_model, preprocess
 
 
-    @staticmethod
-    def _get_loss(name):
+    def _get_loss(self, name):
         if name == 'BinaryCrossentropy':
             return tf.keras.losses.BinaryCrossentropy()
         elif name == 'SparseCategoricalCrossentropy':
+            print('Loss is SparseCategoricalCrossentropy')
             return tf.keras.losses.SparseCategoricalCrossentropy()
         elif name == 'CategoricalCrossentropy':
             return tf.keras.losses.CategoricalCrossentropy()
         else:
-            raise('{} as a loss function is not yet coded!')
+            raise AttributeError('{} as a loss function is not yet coded!'.format(name))
 
-    @staticmethod
-    def _get_optimizer(name, lr=0.001):
+    def _get_optimizer(self, name, lr):
+
         if name == 'Adadelta':
             optimizer = tf.keras.optimizers.Adadelta(learning_rate=lr)
         elif name == 'Adagrad':
             optimizer = tf.keras.optimizers.Adagrad(learning_rate=lr)
         elif name == 'Adam':
-            optimizer = tf.keras.optimizers.Adam(learning_rate=lr)
+            optimizer = tf.keras.optimizers.Adam(lr=lr)
         elif name == 'Adamax':
             optimizer = tf.keras.optimizers.Adamax(learning_rate=lr)
         elif name == 'Ftrl':
@@ -133,14 +133,13 @@ class GetModel:
         elif name == 'SGD':
             optimizer = tf.keras.optimizers.SGD(learning_rate=lr)
         else:
-            raise AttributeError("{} not found in available optimizers".format(name))
-
+            raise AttributeError("{} not found in available optimizers".format(self.model_name))
         return optimizer
 
     def compile_model(self, optimizer, lr, loss_name):
         model = self.model
 
         # Define the trainable model
-        model.compile(optimizer=self._get_optimizer(optimizer, lr=lr), loss=self._get_loss(loss_name))
+        model.compile(optimizer=self._get_optimizer(optimizer, lr), loss=self._get_loss(loss_name))
 
         return model

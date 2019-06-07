@@ -1,6 +1,7 @@
 from random import shuffle, choice
 import os
 import logging
+import tensorflow as tf
 
 logger = logging.getLogger(__name__)
 
@@ -17,6 +18,7 @@ class Preprocess:
         """
         logger.debug('Initializing Preprocess')
         self.directory_path = directory_path
+        self.classes = self.__get_classes()
         self.files, self.labels, self.label_dict, self.min_images = self.__get_lists()
 
     def __check_min_image(self, prev, new):
@@ -25,6 +27,10 @@ class Preprocess:
             return new
         else:
             return prev
+
+    def __get_classes(self):
+        classes = os.listdir(self.directory_path)
+        return classes.__len__()
 
     def __get_lists(self):
         logging.debug('Getting initial list of images and labels')
@@ -39,6 +45,7 @@ class Preprocess:
 
         for x in classes:
             class_files = os.listdir(os.path.join(self.directory_path, x))
+            class_files = [os.path.join(self.directory_path, x, j) for j in class_files]
             class_labels = [label_number for x in range(class_files.__len__())]
             min_images = self.__check_min_image(min_images, class_labels.__len__())
             label_dict[x] = label_number
@@ -46,7 +53,7 @@ class Preprocess:
             files.extend(class_files)
             labels.extend(class_labels)
 
-        return files, labels, label_dict, min_images
+        return files, tf.one_hot(labels, classes.__len__()), label_dict, min_images
 
 
 
