@@ -88,6 +88,7 @@ class GetModel:
 
         # Add a global average pooling and change the output size to our number of classes
         base_model = model
+        base_model.trainable = False
         x = base_model.output
         x = Flatten()(x)
         out = Dense(self.classes, activation='softmax')(x)

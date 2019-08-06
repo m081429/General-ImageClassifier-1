@@ -75,7 +75,7 @@ parser.add_argument("-r", "--learning-rate",
 
 parser.add_argument("-L", "--loss-function",
                     dest='loss_function',
-                    default='SparseCategoricalCrossentropy',
+                    default='BinaryCrossentropy',
                     choices=['SparseCategoricalCrossentropy',
                              'CategoricalCrossentropy',
                              'BinaryCrossentropy'],
@@ -94,11 +94,11 @@ parser.add_argument("-b", "--batch-size",
 parser.add_argument("-w", "--num-workers",
                     dest='NUM_WORKERS',
                     help="Number of workers to use for training",
-                    default=5, type=int)
+                    default=1, type=int)
 
 parser.add_argument("--use-multiprocessing",
                     help="Whether or not to use multiprocessing",
-                    const=True, default=True, nargs='?',
+                    const=True, default=False, nargs='?',
                     type=bool)
 
 parser.add_argument("-V", "--verbose",

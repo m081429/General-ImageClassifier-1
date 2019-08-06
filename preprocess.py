@@ -55,7 +55,6 @@ class Preprocess:
             labels.extend(class_labels)
 
         labels = tf.dtypes.cast(labels, tf.uint8)
- 
         # I noticed that if your loss function expects loss, it has to be one hot, otherwise, it expects an int
         if not self.loss_function.startswith('Sparse'):
             labels = tf.one_hot(labels, classes.__len__())
