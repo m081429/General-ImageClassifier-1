@@ -3,15 +3,24 @@ from tensorflow.keras.layers import Input, Dense, GlobalAveragePooling2D, Flatte
 from tensorflow.keras.layers import *
 from tensorflow.keras import Model
 #from tensorflow.keras import models
+import logging
 import sys
+
+logging.basicConfig(stream=sys.stderr, level="DEBUG",
+                    format='%(name)s (%(levelname)s): %(message)s')
+
+logger = logging.getLogger(__name__)
+logger.setLevel('DEBUG')
+
 class GetModel:
 
-    def __init__(self, model_name=None, img_size=256, classes=1, weights='imagenet', retrain=True, num_layers=None):
+    def __init__(self, model_name=None, img_size=256, classes=1, weights='imagenet', retrain=True, num_layers=None, reg_drop_out_per=None):
         self.model_name = model_name
         self.img_size = img_size
         self.classes = classes
         self.weights = weights
         self.num_layers = num_layers
+        self.reg_drop_out_per = reg_drop_out_per		
         self.model, self.preprocess = self.__get_model_and_preprocess(retrain)
 
     def __get_model_and_preprocess(self, retrain):
@@ -103,7 +112,9 @@ class GetModel:
         #conv_model = Model(inputs=input_tensor, outputs=out)
         #Naresh: modified
         x = GlobalAveragePooling2D(name='avg_pool')(x)
-        #x = Dropout(0.5)(x)
+        if self.reg_drop_out_per is not None:		
+            x = Dropout(self.reg_drop_out_per)(x)
+            logger.debug('drop applied '+str(self.reg_drop_out_per))
         out = Dense(self.classes, activation='softmax')(x)
         conv_model = Model(inputs=input_tensor, outputs=out)
 
@@ -127,6 +138,8 @@ class GetModel:
             return tf.keras.losses.SparseCategoricalCrossentropy()
         elif name == 'CategoricalCrossentropy':
             return tf.keras.losses.CategoricalCrossentropy()
+        elif name == 'Hinge':
+            return tf.keras.losses.Hinge()
         else:
             raise AttributeError('{} as a loss function is not yet coded!'.format(name))
 
