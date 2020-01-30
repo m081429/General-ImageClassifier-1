@@ -18,8 +18,11 @@ class CallBacks:
                                               write_images=False)
 
     def _get_cp(self):
-        return tf.keras.callbacks.ModelCheckpoint(filepath=os.path.join(self.log_dir, 'cp-{epoch:04d}.ckpt'), verbose=1,  save_weights_only=True,save_frequency=1)
-        #save_weights_only=True,period=1,save_best_only=True) #save_best_only=True)
+        return tf.keras.callbacks.ModelCheckpoint(filepath=os.path.join(self.log_dir, 'cp-{epoch:04d}.ckpt'),
+                                                  verbose=1,
+                                                  save_weights_only=True,
+                                                  save_frequency=1)
+
 
     @staticmethod
     def _get_es():
