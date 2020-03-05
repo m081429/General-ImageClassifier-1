@@ -174,7 +174,7 @@ if train_data.filetype!="tfrecords":
     t_image_ds = t_path_ds.map(format_example, num_parallel_calls=AUTOTUNE)
     t_label_ds = tf.data.Dataset.from_tensor_slices(tf.cast(train_data.labels, tf.int64))
     t_image_label_ds = tf.data.Dataset.zip((t_image_ds, t_label_ds))
-    train_ds = t_image_label_ds.shuffle(buffer_size=train_data.min_images).repeat()
+    #train_ds = t_image_label_ds.shuffle(buffer_size=train_data.min_images).repeat()
 else:
     t_path_ds = tf.data.TFRecordDataset(train_data.files)
     t_image_ds = t_path_ds.map(format_example_tf, num_parallel_calls=AUTOTUNE)
@@ -188,10 +188,10 @@ else:
     train_data.min_images=num_image
     t_image_label_ds = tf.data.Dataset.zip(t_image_ds)
     #naresh:adding these additional steps to avoid shuffling on images and shuffle on imagepaths
-    t_image_ds = t_path_ds.shuffle(buffer_size=train_data.min_images).repeat().map(format_example_tf, num_parallel_calls=AUTOTUNE)
-    train_ds = tf.data.Dataset.zip(t_image_ds)
+    #t_image_ds = t_path_ds.shuffle(buffer_size=train_data.min_images).repeat().map(format_example_tf, num_parallel_calls=AUTOTUNE)
+    #train_ds = tf.data.Dataset.zip(t_image_ds)
 
-#train_ds = t_image_label_ds.shuffle(buffer_size=train_data.min_images).repeat()
+train_ds = t_image_label_ds.shuffle(buffer_size=train_data.min_images).repeat()
 train_ds = train_ds.batch(args.BATCH_SIZE).prefetch(buffer_size=AUTOTUNE)
 training_steps = int(train_data.min_images / args.BATCH_SIZE)
 logger.debug('Completed Training dataset')
