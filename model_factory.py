@@ -110,20 +110,8 @@ class GetModel:
         # Add a global average pooling and change the output size to our number of classes
 
         base_model = model
-        base_model.trainable = False
-        
-        # Now check to see if we are retraining all but the head, or deeper down the stack
-        if self.num_layers is not None:
-            #base_model.trainable = True
-            if self.num_layers==0:
-                for layer in base_model.layers:
-                    layer.trainable = True
-            if self.num_layers>0:		
-                for layer in base_model.layers[:self.num_layers]:
-                    layer.trainable = False
-                for layer in base_model.layers[self.num_layers:]:
-                    layer.trainable = True
-                    
+
+            #sys.exit(0)        
         x = base_model.output
         #
         #out = Dense(self.classes, activation='softmax')(x)
@@ -132,16 +120,53 @@ class GetModel:
         #x =AveragePooling2D(pool_size=8)(x)
         x = GlobalAveragePooling2D(name='avg_pool')(x)
         x = Flatten()(x)
+        #x = Dense(256, activation='relu')(x)
+        #x = Dropout(0.75)(x)
+        #x = Dense(256, activation='relu', kernel_regularizer=regularizers.l2(0.1))(x)
+        #x = BatchNormalization()(x)
         #x = Dropout(0.5)(x)
-        #x = Dense(1024, activation='relu', kernel_regularizer=regularizers.l2(5e-4))(x)
-        #x = Dropout(0.5)(x)    
+
+        #x = BatchNormalization()(x)
+        #x = Dropout(0.35)(x)
+        #x = Dense(1024, activation='relu', kernel_initializer='he_normal',kernel_regularizer=regularizers.l2(0.00001))(x)
+        #x = BatchNormalization()(x)
+        #x = Dropout(0.35)(x)
+        #x = Dense(1024, activation='relu', kernel_initializer='he_normal',kernel_regularizer=regularizers.l2(0.00001))(x)
+        #x = BatchNormalization()(x)
+        #x = Dropout(0.35)(x)
+        #x = Dense(1024, activation='relu', kernel_initializer='he_normal',kernel_regularizer=regularizers.l2(0.00001))(x)
+        #x = BatchNormalization()(x)
+        #x = Dropout(0.3)(x)
+        #x = Dense(512, activation='relu', kernel_initializer='he_normal',kernel_regularizer=regularizers.l2(0.00001))(x)
+        
         if self.reg_drop_out_per is not None:		
             x = Dropout(self.reg_drop_out_per)(x)
             logger.debug('drop applied '+str(self.reg_drop_out_per))
             #out = Dense(self.classes, kernel_regularizer=regularizers.l2(0.0001), activation='softmax')(x)
-            out = Dense(self.classes, activation='softmax', kernel_initializer='he_normal')(x)
+            #, kernel_initializer='he_normal'
+            out = Dense(self.classes, activation='softmax')(x)
         else:
-            out = Dense(self.classes, activation='softmax', kernel_initializer='he_normal')(x)    
+            #,kernel_regularizer=regularizers.l2(0.001)
+            #, kernel_initializer='he_normal'
+            out = Dense(self.classes, activation='softmax')(x) 
+        
+        base_model.trainable = False
+        
+        # Now check to see if we are retraining all but the head, or deeper down the stack
+        if self.num_layers is not None:
+            #base_model.trainable = True
+            #for i, layer in enumerate(base_model.layers):
+                #print(i, layer.name)
+            if self.num_layers==0:
+                for layer in base_model.layers:
+                    #if "BatchNormalization" in layer.__class__.__name__:
+                    layer.trainable = True
+            if self.num_layers>0:
+                for layer in base_model.layers[:self.num_layers]:
+                    layer.trainable = False
+                for layer in base_model.layers[self.num_layers:]:
+                    layer.trainable = True
+                    
         conv_model = Model(inputs=input_tensor, outputs=out)
 
 

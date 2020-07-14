@@ -173,6 +173,9 @@ update_status(True)
 if train_data.filetype!="tfrecords":
     t_path_ds = tf.data.Dataset.from_tensor_slices(train_data.files)
     t_image_ds = t_path_ds.map(format_example, num_parallel_calls=AUTOTUNE)
+    #train_datagen = tf.keras.preprocessing.image.ImageDataGenerator(rescale=1, zoom_range=0.3, rotation_range=50,
+                                   #width_shift_range=0.2, height_shift_range=0.2, shear_range=0.2, 
+                                   #horizontal_flip=True, fill_mode='nearest')
     t_label_ds = tf.data.Dataset.from_tensor_slices(tf.cast(train_data.labels, tf.int64))
     t_image_label_ds = tf.data.Dataset.zip((t_image_ds, t_label_ds))
     #train_ds = t_image_label_ds.shuffle(buffer_size=train_data.min_images).repeat()
@@ -192,10 +195,11 @@ else:
     #t_image_ds = t_path_ds.shuffle(buffer_size=train_data.min_images).repeat()
     #train_ds = tf.data.Dataset.zip(t_image_ds)
     #train_ds = t_image_label_ds.shuffle(buffer_size=train_data.min_images).repeat()
-train_ds = t_image_label_ds.shuffle(buffer_size=train_data.min_images)
-
+#train_ds = t_image_label_ds.shuffle(buffer_size=train_data.min_images)
+train_ds = t_image_label_ds
 #train_ds = t_image_label_ds.shuffle(buffer_size=train_data.min_images).repeat()
 train_ds = train_ds.repeat().batch(args.BATCH_SIZE).prefetch(buffer_size=AUTOTUNE)
+#train_ds = train_ds.batch(args.BATCH_SIZE).prefetch(buffer_size=AUTOTUNE)
 training_steps = int(train_data.min_images / args.BATCH_SIZE)
 logger.debug('Completed Training dataset')
 
@@ -221,7 +225,8 @@ if args.image_dir_validation:
         validation_data.min_images=num_image
         v_image_label_ds = tf.data.Dataset.zip(v_image_ds)
 
-    validation_ds = v_image_label_ds.shuffle(buffer_size=validation_data.min_images)
+    #validation_ds = v_image_label_ds.shuffle(buffer_size=validation_data.min_images)
+    validation_ds = v_image_label_ds
     #num_img=0
     #for image, label in validation_ds:
         #print("Image shape: ", image.numpy().shape)   
@@ -230,8 +235,9 @@ if args.image_dir_validation:
         #num_img=num_img+1
     #print(num_img)
     #sys.exit(0)
-    
+    #validation_ds = validation_ds.batch(args.BATCH_SIZE).prefetch(buffer_size=AUTOTUNE)
     validation_ds = validation_ds.repeat().batch(args.BATCH_SIZE).prefetch(buffer_size=AUTOTUNE)
+    
     validation_steps = int(validation_data.min_images / args.BATCH_SIZE)
     logger.debug('Completed Validation dataset')
 
@@ -288,13 +294,11 @@ if GPU is True:
 
     logger.debug('Completed loading initialized model')
     cb = CallBacks(learning_rate=args.lr, log_dir=out_dir, optimizer=args.optimizer)
-    logger.debug('Model image saved')
-    model.fit(train_ds,
-              steps_per_epoch=training_steps,
+    logger.debug('Model image saved')#
+    model.fit(train_ds, steps_per_epoch=training_steps, 
               epochs=args.num_epochs,
               callbacks=cb.get_callbacks(),
-              validation_data=validation_ds,
-              validation_steps=validation_steps,
+              validation_data=validation_ds, validation_steps=validation_steps,   
               class_weight=None,
               max_queue_size=1000,
               workers=args.NUM_WORKERS,

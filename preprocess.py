@@ -4,6 +4,8 @@ import logging
 import tensorflow as tf
 import sys
 from PIL import Image
+import random
+
 logger = logging.getLogger(__name__)
 global tf_image, tf_label, status
 
@@ -65,7 +67,13 @@ class Preprocess:
             label_number += 1
             files.extend(class_files)
             labels.extend(class_labels)
-
+        '''shuffling images'''    
+        idx=list(range(0,len(files)))
+        random.shuffle(idx)
+        random.shuffle(idx)
+        files = [ files[i] for i in idx]
+        labels = [ labels[i] for i in idx]
+        
         labels = tf.dtypes.cast(labels, tf.uint8)
         # I noticed that if your loss function expects loss, it has to be one hot, otherwise, it expects an int
         if not self.loss_function.startswith('Sparse'):
@@ -91,17 +99,29 @@ def format_example(image_name=None, img_size=256):
     train = status 	
     image = tf.io.read_file(image_name)
     image = tf.io.decode_jpeg(image, channels=3)
-    image = tf.cast(image, tf.float32)/255
+    image = tf.cast(image, tf.float32)#/255
+    image = (image/127.5) - 1
     #image = tf.image.per_image_standardization(image)
     image = tf.image.resize(image, (img_size, img_size))
     
     if train is True:
         image = tf.image.random_flip_left_right(image)
-        image = tf.image.random_brightness(image, max_delta=0.2)
-        image = tf.image.random_contrast(image, lower=0.0, upper=0.1)
+        #image = tf.image.random_brightness(image, 0.4)
+        #image = tf.image.random_contrast(image, lower=0.0, upper=0.1)
         image = tf.image.random_flip_up_down(image)
-        image = tf.image.random_hue(image, max_delta=0.2)
-
+        #image = tf.image.random_hue(image, max_delta=0.2)
+        image = tf.image.random_hue(image, 0.08)
+        image = tf.image.random_saturation(image, 0.6, 1.6)
+        image = tf.image.random_brightness(image, 0.05)
+        image = tf.image.random_contrast(image, 0.7, 1.3)
+        #image = tf.image.rot90(image, tf.random_uniform(shape=[], minval=0, maxval=4, dtype=tf.int32))
+        #image = image.numpy()
+        #image = tf.keras.preprocessing.image.random_rotation(image, 45, row_axis=0, col_axis=1, channel_axis=2)
+        #image = tf.keras.preprocessing.image.random_shear(image, 0.3, row_axis=0, col_axis=1, channel_axis=2)
+        #image = tf.keras.preprocessing.image.random_shift(image, 0.3, 0.3, row_axis=0, col_axis=1, channel_axis=2)
+        #image = tf.keras.preprocessing.image.random_zoom(image,0.9, row_axis=0, col_axis=1, channel_axis=2)
+        #image = tf.convert_to_tensor(image, dtype=tf.float32)      
+                
     image = tf.reshape(image, (img_size, img_size, 3))
 
     return image
@@ -126,19 +146,26 @@ def format_example_tf(tfrecord_proto, img_size=256):
     label = parsed_image_dataset[tf_label]
     label = tf.dtypes.cast(label, tf.uint8)
     label = tf.one_hot(label, 2) 	
-    #image = tf.io.decode_png(image, channels=3)
+    image = tf.io.decode_png(image, channels=3)
     #image = tf.cast(image, tf.float32)
-    image = tf.io.decode_jpeg(image, channels=3)
-    image = tf.cast(image, tf.float32)/255
+    #image = tf.io.decode_jpeg(image, channels=3)
+    #image = tf.cast(image, tf.float32)/255
+    image = tf.cast(image, tf.float32)#/255
+    image = (image/127.5) - 1
     #image = tf.image.per_image_standardization(image)
     image = tf.image.resize(image, (img_size, img_size))
 
     if train is True:
         image = tf.image.random_flip_left_right(image)
-        image = tf.image.random_brightness(image, max_delta=0.2)
-        image = tf.image.random_contrast(image, lower=0.0, upper=0.1)
+        #image = tf.image.random_brightness(image, 0.4)
+        #image = tf.image.random_contrast(image, lower=0.0, upper=0.1)
         image = tf.image.random_flip_up_down(image)
-        image = tf.image.random_hue(image, max_delta=0.2)
+        #image = tf.image.random_hue(image, max_delta=0.2)
+        image = tf.image.random_hue(image, 0.08)
+        image = tf.image.random_saturation(image, 0.6, 1.6)
+        image = tf.image.random_brightness(image, 0.05)
+        image = tf.image.random_contrast(image, 0.7, 1.3)
+        #image = tf.image.rot90(image, tf.random_uniform(shape=[], minval=0, maxval=4, dtype=tf.int32))	
 
     image = tf.reshape(image, (img_size, img_size, 3))	
     return image, label 

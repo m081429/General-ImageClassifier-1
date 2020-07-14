@@ -24,7 +24,7 @@ class CallBacks:
 
     @staticmethod
     def _get_es():
-        return tf.keras.callbacks.EarlyStopping(monitor='loss', patience=30)
+        return tf.keras.callbacks.EarlyStopping(monitor='val_accuracy', patience=30)
     
     def _get_grad_cam(self):
         output_dir=os.path.join(self.log_dir, 'output_gradcam')
